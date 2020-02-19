@@ -81,9 +81,48 @@ calc_clumped_tables <- function(seating){
   return(clumps)
 }
 
+calc_clumped_tables <- function(seating){
+  
+  # Given a seating --- which, again, is just a vector of length 28 with Ms and
+  # Fs in random order --- how many clumped tables are there? We will define a
+  # clumped table as one that is all M or all F. As discussed in class, there
+  # are other definitions of "clumping" that we could use.
+  
+  # Good functions test to see if their assumptions are met. See the chapter in
+  # the new 1005 textbook for discussion:
+  # https://davidkane9.github.io/PPBDS/6-functions.html
+  
+  stopifnot(is.list(seating))
+  plan <- unlist(seating)
+  
+  stopifnot(length(plan) == 28)
+  stopifnot(all(plan %in% c("M", "F")))
+
+  # It is not obvious how to do this elegantly. So, I just hack it! (Stole this
+  # approach from Beau, I think.) I grab out each table, one at a time, knowing
+  # that I have arbitrarily decided that seats 1 through 4 are Table 1, seats 5
+  # through 8 are Table 2 and so on. Then, I create a logical vector reporting
+  # whether or the person at each seat is Female. Then, I sum up this vector. If
+  # it is all Male, the sum will be zero. It it is all Female, the sum will be
+  # four. Check that, and sum of the results for each table. Obviously, you need
+  # to do a fair bit of fussing to make sure this is working. Test cases would
+  # be good!
+  
+  clumps <- 
+    (sum(plan[1:4] == "F") %in% c(4)) +
+    (sum(plan[5:8] == "F") %in% c(4)) +
+    (sum(plan[9:12] == "F") %in% c(4)) +
+    (sum(plan[13:16] == "F") %in% c(4)) +
+    (sum(plan[17:20] == "F") %in% c(4)) +
+    (sum(plan[21:24] == "F") %in% c(4)) +
+    (sum(plan[25:28] == "F") %in% c(4))
+  
+  return(clumps)
+}
+
 ```
 
-```{r sim, cache=TRUE}
+```{r sim}
 # Those are all the tools we need. Many/most of my simulations use the tricks we
 # learned in Gov 1005: list-colums and map_* functions are your friends!
 # https://davidkane9.github.io/PPBDS/6-functions.html#list-columns-and-map_-functions
@@ -112,6 +151,24 @@ sim %>%
          caption = "Data Collected in Gov 1006 on 2020-02-12",
          x = "Number of Single-Gender Tables out of Seven",
          y = "Percentage of Simulations out of 10,000")
+```
+
+```{r}
+
+library(rstanarm)
+
+N  <- 1000
+true_ability <- rnorm(N, 50, 10)
+noise_1 <- rnorm(N, 0, 10)
+noise_2 <- rnorm(N, 0, 10)
+midterm <- true_ability + noise_1
+final <- true_ability + noise_2
+exams <- data.frame(midterm, final)
+
+fit_1 <- stan_glm(final ~ midterm, data = exams)
+
+abline(fit_1)
+
 ```
 
 
